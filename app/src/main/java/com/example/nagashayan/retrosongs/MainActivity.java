@@ -6,6 +6,9 @@ import java.util.Comparator;
 
 import com.example.nagashayan.retrosongs.MusicService.MusicBinder;
 
+import android.content.BroadcastReceiver;
+import android.content.IntentFilter;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.widget.MediaController.MediaPlayerControl;
 import android.net.Uri;
@@ -41,15 +44,25 @@ public class MainActivity extends ActionBarActivity implements MediaPlayerContro
 	private MusicService musicSrv;
 	private Intent playIntent;
 	//binding
-	private boolean musicBound=false;
+	private static boolean musicBound=false;
     //for music controllers
     private MusicController controller;
     //for handling pause and play
-    private boolean paused=false, playbackPaused=false;
+    private static boolean paused=false, playbackPaused=false;
+
+    // few variables for accessibility for user
+    private static String CURRENT_SONG_PLAYING = null;
+    private static String LAST_SONG_PLAYED = null;
+    private static int DEFAULT_FIRST_SONG = 0;
+    private static String CURRENT_PLAYER_STATE = null;
+    private static String DEFAULT_PLAYER_STATE = "pause";
+    private static String CURRENT_SONG_DURATION = null;
+    private static String CURRENT_SONG_TITLE = null;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+        Log.v("on create","activity");
 		setContentView(R.layout.activity_main);
 
 		//retrieve list view
@@ -69,14 +82,17 @@ public class MainActivity extends ActionBarActivity implements MediaPlayerContro
 		songView.setAdapter(songAdt);
         //set controller
         setController();
-        Log.v("on create","after set controller");
+        Log.v("on create", "after set controller");
+
+        //create fragment for handling orientation changes
+       /* FragmentManager fm = getSupportFragmentManager();
+        mTaskFragment = (TaskFragment) fm.findFragmentByTag(TAG_TASK_FRAGMENT);*/
 
 	}
     //init first song
     private void loadFirstSong(){
         //set default song for first time use - as of now first song we are just loading song to enable controller
         musicSrv.setSong(0);
-        //musicSrv.playSong();
 
         controller.show(0);
     }
@@ -107,9 +123,11 @@ public class MainActivity extends ActionBarActivity implements MediaPlayerContro
 	protected void onStart() {
 		super.onStart();
 		if(playIntent==null){
+            Log.v("activity","onStart binding service");
 			playIntent = new Intent(this, MusicService.class);
+            startService(playIntent);
 			bindService(playIntent, musicConnection, Context.BIND_AUTO_CREATE);
-			startService(playIntent);
+
 
 		}
 	}
@@ -178,9 +196,11 @@ public class MainActivity extends ActionBarActivity implements MediaPlayerContro
 
 	@Override
 	protected void onDestroy() {
-		stopService(playIntent);
-		musicSrv=null;
-		super.onDestroy();
+        Log.e("activity","destroyed");
+            stopService(playIntent);
+            musicSrv = null;
+            super.onDestroy();
+
 	}
     private void setController(){
         //set the controller up
@@ -270,6 +290,7 @@ public class MainActivity extends ActionBarActivity implements MediaPlayerContro
 
     @Override
     public void seekTo(int pos) {
+        Log.v("seeking pos",Integer.toString(pos));
         musicSrv.seek(pos);
     }
 
@@ -288,20 +309,50 @@ public class MainActivity extends ActionBarActivity implements MediaPlayerContro
     @Override
     protected void onPause(){
         super.onPause();
+        Log.v("inside","on pause");
         paused=true;
 
     }
     @Override
     protected void onResume(){
         super.onResume();
+        Log.v("activity","on resume"+paused);
         if(paused){
-            setController();
+            //as this was resetting controller, like pause was changed to start on resume
+            //setController();
             paused=false;
         }
+        // Set up receiver for media player onPrepared broadcast
+        LocalBroadcastManager.getInstance(this).registerReceiver(onPrepareReceiver,
+                new IntentFilter("MEDIA_PLAYER_PREPARED"));
     }
     @Override
     protected void onStop() {
-        controller.hide();
+        Log.v("inside","on stop"+CURRENT_SONG_TITLE);
+        //controller.hide();
         super.onStop();
+
     }
+    // Broadcast receiver to determine when music player has been prepared
+    private BroadcastReceiver onPrepareReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context c, Intent i) {
+            Log.v("receiver","received player prepared"+i.getAction());
+            switch (i.getAction()){
+                case "MEDIA_PLAYER_PREPARED":
+                    // When music player has been prepared, show controller
+                    controller.show(0);
+                    //change player state
+                    CURRENT_PLAYER_STATE = "play";
+                    CURRENT_SONG_TITLE = i.getStringExtra("SONG_TITLE");
+                    break;
+                case "CURRENT_SONG_DURATION":
+
+                    break;
+
+            }
+
+        }
+    };
+
 }
