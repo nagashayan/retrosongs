@@ -2,8 +2,10 @@ package com.example.nagashayan.retrosongs;
 
 import java.util.ArrayList;
 
+import android.app.NotificationManager;
 import android.app.Service;
 import android.content.ContentUris;
+import android.content.Context;
 import android.content.Intent;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
@@ -12,10 +14,12 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import java.util.Random;
 import android.app.Notification;
 import android.app.PendingIntent;
+import android.widget.RemoteViews;
 /*
  * This is demo code to accompany the Mobiletuts+ series:
  * Android SDK: Creating a Music Player
@@ -102,10 +106,12 @@ MediaPlayer.OnCompletionListener {
         Log.v("inside","playsong");
 		//play
 		player.reset();
+
 		//get song
 		Song playSong = songs.get(songPosn);
         //get title
         songTitle=playSong.getTitle();
+        Log.v("song",songTitle);
 		//get id
 		long currSong = playSong.getID();
 		//set uri
@@ -113,12 +119,13 @@ MediaPlayer.OnCompletionListener {
 				android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
 				currSong);
 		//set the data source
-		try{ 
+		try{
 			player.setDataSource(getApplicationContext(), trackUri);
 		}
 		catch(Exception e){
 			Log.e("MUSIC SERVICE", "Error setting data source", e);
 		}
+
 		player.prepareAsync(); 
 	}
 
@@ -153,18 +160,27 @@ MediaPlayer.OnCompletionListener {
         PendingIntent pendInt = PendingIntent.getActivity(this, 0,
                 notIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
+        RemoteViews notificationView = new RemoteViews(getPackageName(), R.layout.notification_mediacontroller);
+        notificationView.setTextViewText(R.id.textView, "Playing: "+songTitle);
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
-
+        //Notification.MediaStyle style = new Notification.MediaStyle();
         builder.setContentIntent(pendInt)
                 .setSmallIcon(R.drawable.play)
                 .setTicker(songTitle)
                 .setOngoing(true)
                 .setContentTitle("Playing")
-        .setContentText(songTitle);
+                .setContentText(songTitle)
+                .setContent(notificationView);
+
         Notification not = builder.build();
 
+
         startForeground(NOTIFY_ID, not);
-        Log.v("service","on prepared");
+
+        // Broadcast intent to activity to let it know the media player has been prepared
+        Intent onPreparedIntent = new Intent("MEDIA_PLAYER_PREPARED");
+        onPreparedIntent.putExtra("SONG_TITLE",songTitle);
+        LocalBroadcastManager.getInstance(this).sendBroadcast(onPreparedIntent);
 	}
     public int getPosn(){
         return player.getCurrentPosition();
@@ -213,7 +229,9 @@ MediaPlayer.OnCompletionListener {
     }
     @Override
     public void onDestroy() {
+        Log.e("service","destroyed");
         stopForeground(true);
+
     }
     //for setting shuffle
     public void setShuffle(){
