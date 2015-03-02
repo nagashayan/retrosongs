@@ -119,14 +119,26 @@ MediaPlayer.OnCompletionListener {
 				android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
 				currSong);
 		//set the data source
+        //to check if setting datasource was successfull
+         boolean success = true;
 		try{
 			player.setDataSource(getApplicationContext(), trackUri);
 		}
 		catch(Exception e){
 			Log.e("MUSIC SERVICE", "Error setting data source", e);
+            success = false;
 		}
+        if(success)
+		player.prepareAsync();
+        else{
+            Log.e("unable to play","may be media file corrupted");
+            //send broadcast to toast this msg to user
+            // Broadcast intent to activity to let it know the media player has been prepared
+            Intent onPreparedIntent = new Intent("MESSAGES");
+            onPreparedIntent.putExtra("MESSAGE","Wrong media file selected,select another one");
+            LocalBroadcastManager.getInstance(this).sendBroadcast(onPreparedIntent);
+        }
 
-		player.prepareAsync(); 
 	}
 
 	//set the song

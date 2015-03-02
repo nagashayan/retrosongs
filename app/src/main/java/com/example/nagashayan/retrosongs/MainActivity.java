@@ -26,6 +26,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ListView;
+import android.widget.Toast;
 
 /*
  * This is demo code to accompany the Mobiletuts+ series:
@@ -348,6 +349,9 @@ public class MainActivity extends ActionBarActivity implements MediaPlayerContro
                     break;
                 case "CURRENT_SONG_DURATION":
 
+                    break;
+                case "MESSAGES":
+                    Toast.makeText(getApplicationContext(),i.getStringExtra("MESSAGE"),Toast.LENGTH_LONG).show();
                     break;
 
             }
