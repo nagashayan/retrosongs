@@ -11,7 +11,16 @@
 	<ListView
 		android:id="@+id/song_list"
 		android:layout_width="fill_parent"
-		android:layout_height="wrap_content" >
+		android:layout_height="fill_parent"
+        android:paddingBottom="60dp"
+        android:fastScrollAlwaysVisible="false">
 	</ListView>
 
+    <ListView
+        android:id="@+id/controllerplaceholder"
+        android:layout_width="fill_parent"
+        android:layout_height="50dp"
+
+        >
+    </ListView>
 </LinearLayout>
