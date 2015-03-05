@@ -94,7 +94,7 @@ public class MainActivity extends ActionBarActivity implements MediaPlayerContro
     private void loadFirstSong(){
         //set default song for first time use - as of now first song we are just loading song to enable controller
         musicSrv.setSong(0);
-
+       // musicSrv.initMusicPlayer();
         controller.show(0);
     }
 
