@@ -27,18 +27,18 @@ import android.widget.RemoteViews;
  * Sue Smith - February 2014
  */
 
-public class MusicService extends Service implements 
-MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener,
-MediaPlayer.OnCompletionListener {
+public class MusicService extends Service implements
+        MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener,
+        MediaPlayer.OnCompletionListener {
 
-	//media player
-	private MediaPlayer player;
-	//song list
-	private ArrayList<Song> songs;
-	//current position
-	private int songPosn;
-	//binder
-	private final IBinder musicBind = new MusicBinder();
+    //media player
+    private MediaPlayer player;
+    //song list
+    private ArrayList<Song> songs;
+    //current position
+    private int songPosn;
+    //binder
+    private final IBinder musicBind = new MusicBinder();
     //for notification
     private String songTitle;
     private static final int NOTIFY_ID=1;
@@ -51,85 +51,85 @@ MediaPlayer.OnCompletionListener {
         //TODO do something useful
         return START_NOT_STICKY;
     }*/
-	public void onCreate(){
-		//create the service
-		super.onCreate();
-		//initialize position
-		songPosn=0;
-		//create player
-		player = new MediaPlayer();
-		//initialize
-		initMusicPlayer();
+    public void onCreate(){
+        //create the service
+        super.onCreate();
+        //initialize position
+        songPosn=0;
+        //create player
+        player = new MediaPlayer();
+        //initialize
+        initMusicPlayer();
         //initiate random for shuffling
         rand=new Random();
-	}
+    }
 
-	public void initMusicPlayer(){
-		//set player properties
-		player.setWakeMode(getApplicationContext(), 
-				PowerManager.PARTIAL_WAKE_LOCK);
-		player.setAudioStreamType(AudioManager.STREAM_MUSIC);
-		//set listeners
-		player.setOnPreparedListener(this);
-		player.setOnCompletionListener(this);
-		player.setOnErrorListener(this);
-	}
+    public void initMusicPlayer(){
+        //set player properties
+        player.setWakeMode(getApplicationContext(),
+                PowerManager.PARTIAL_WAKE_LOCK);
+        player.setAudioStreamType(AudioManager.STREAM_MUSIC);
+        //set listeners
+        player.setOnPreparedListener(this);
+        player.setOnCompletionListener(this);
+        player.setOnErrorListener(this);
+    }
 
-	//pass song list
-	public void setList(ArrayList<Song> theSongs){
-		songs=theSongs;
-	}
+    //pass song list
+    public void setList(ArrayList<Song> theSongs){
+        songs=theSongs;
+    }
 
-	//binder
-	public class MusicBinder extends Binder {
-		MusicService getService() { 
-			return MusicService.this;
-		}
-	}
+    //binder
+    public class MusicBinder extends Binder {
+        MusicService getService() {
+            return MusicService.this;
+        }
+    }
 
-	//activity will bind to service
-	@Override
-	public IBinder onBind(Intent intent) {
-		return musicBind;
-	}
+    //activity will bind to service
+    @Override
+    public IBinder onBind(Intent intent) {
+        return musicBind;
+    }
 
-	//release resources when unbind
-	@Override
-	public boolean onUnbind(Intent intent){
-		player.stop();
-		player.release();
-		return false;
-	}
+    //release resources when unbind
+    @Override
+    public boolean onUnbind(Intent intent){
+        player.stop();
+        player.release();
+        return false;
+    }
 
-	//play a song
-	public void playSong(){
+    //play a song
+    public void playSong(){
         Log.v("inside","playsong");
-		//play
-		player.reset();
+        //play
+        player.reset();
 
-		//get song
-		Song playSong = songs.get(songPosn);
+        //get song
+        Song playSong = songs.get(songPosn);
         //get title
         songTitle=playSong.getTitle();
         Log.v("song",songTitle);
-		//get id
-		long currSong = playSong.getID();
-		//set uri
-		Uri trackUri = ContentUris.withAppendedId(
-				android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-				currSong);
-		//set the data source
+        //get id
+        long currSong = playSong.getID();
+        //set uri
+        Uri trackUri = ContentUris.withAppendedId(
+                android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                currSong);
+        //set the data source
         //to check if setting datasource was successfull
-         boolean success = true;
-		try{
-			player.setDataSource(getApplicationContext(), trackUri);
-		}
-		catch(Exception e){
-			Log.e("MUSIC SERVICE", "Error setting data source", e);
+        boolean success = true;
+        try{
+            player.setDataSource(getApplicationContext(), trackUri);
+        }
+        catch(Exception e){
+            Log.e("MUSIC SERVICE", "Error setting data source", e);
             success = false;
-		}
+        }
         if(success)
-		player.prepareAsync();
+            player.prepareAsync();
         else{
             Log.e("unable to play","may be media file corrupted");
             //send broadcast to toast this msg to user
@@ -139,13 +139,13 @@ MediaPlayer.OnCompletionListener {
             LocalBroadcastManager.getInstance(this).sendBroadcast(onPreparedIntent);
         }
 
-	}
+    }
 
-	//set the song
-	public void setSong(int songIndex){
+    //set the song
+    public void setSong(int songIndex){
         Log.v("inside","set song");
-		songPosn=songIndex;	
-	}
+        songPosn=songIndex;
+    }
 
     @Override
     public void onCompletion(MediaPlayer mp) {
@@ -161,10 +161,10 @@ MediaPlayer.OnCompletionListener {
         return false;
     }
 
-	@Override
-	public void onPrepared(MediaPlayer mp) {
-		//start playback
-		mp.start();
+    @Override
+    public void onPrepared(MediaPlayer mp) {
+        //start playback
+        mp.start();
         //show player start button
 
         Intent notIntent = new Intent(this, MainActivity.class);
@@ -193,7 +193,7 @@ MediaPlayer.OnCompletionListener {
         Intent onPreparedIntent = new Intent("MEDIA_PLAYER_PREPARED");
         onPreparedIntent.putExtra("SONG_TITLE",songTitle);
         LocalBroadcastManager.getInstance(this).sendBroadcast(onPreparedIntent);
-	}
+    }
     public int getPosn(){
         return player.getCurrentPosition();
     }
