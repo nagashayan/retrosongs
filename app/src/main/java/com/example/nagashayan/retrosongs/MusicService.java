@@ -121,16 +121,19 @@ MediaPlayer.OnCompletionListener,MediaPlayer.OnBufferingUpdateListener {
         Log.v("song",songTitle);
 		//get id
 		long currSong = playSong.getID();
+        //get url of the song
+        String url = playSong.getUrl();
+        Log.v("url",url);
 		//set uri
-		Uri trackUri = ContentUris.withAppendedId(
+		/*Uri trackUri = ContentUris.withAppendedId(
 				android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
 				currSong);
-		//set the data source
+		*///set the data source
         //to check if setting datasource was successfull
          boolean success = true;
 		try{
 			//player.setDataSource(getApplicationContext(), trackUri);
-            String url = "http://programmerguru.com/android-tutorial/wp-content/uploads/2013/04/hosannatelugu.mp3";
+            //String url = "http://programmerguru.com/android-tutorial/wp-content/uploads/2013/04/hosannatelugu.mp3";
             player.setDataSource(url);
             Log.v("setted","datasource");
             player.setOnBufferingUpdateListener(this);

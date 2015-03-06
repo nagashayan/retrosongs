@@ -1,15 +1,26 @@
 package com.example.nagashayan.retrosongs;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Array;
+import java.net.URL;
+import java.net.URLConnection;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.StringTokenizer;
 
 import com.example.nagashayan.retrosongs.MusicService.MusicBinder;
 
 import android.content.BroadcastReceiver;
 import android.content.IntentFilter;
+import android.os.AsyncTask;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
+import android.widget.ArrayAdapter;
 import android.widget.MediaController.MediaPlayerControl;
 import android.net.Uri;
 import android.os.Bundle;
@@ -27,6 +38,12 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ListView;
 import android.widget.Toast;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
 /*
  * This is demo code to accompany the Mobiletuts+ series:
@@ -59,7 +76,10 @@ public class MainActivity extends ActionBarActivity implements MediaPlayerContro
     private static String DEFAULT_PLAYER_STATE = "pause";
     private static String CURRENT_SONG_DURATION = null;
     private static String CURRENT_SONG_TITLE = null;
+    private static String SERVER_URL = "http://10.0.2.2/songlist.php";
 
+    // Instance Variables
+    private MainActivity mainActivity = null;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -71,7 +91,12 @@ public class MainActivity extends ActionBarActivity implements MediaPlayerContro
         //instantiate list
         songList = new ArrayList<Song>();
         //get songs from device
-        getSongList();
+       // getSongList();
+           /*
+     * Spawn a GetListTask thread. This thread will get the data from the
+     * server in the background, so as not to block our main (UI) thread.
+     */
+        (new GetListTask()).execute((Object)null);
         //sort alphabetically by title
         Collections.sort(songList, new Comparator<Song>(){
             public int compare(Song a, Song b){
@@ -94,7 +119,7 @@ public class MainActivity extends ActionBarActivity implements MediaPlayerContro
     private void loadFirstSong(){
         //set default song for first time use - as of now first song we are just loading song to enable controller
         musicSrv.setSong(0);
-       // musicSrv.initMusicPlayer();
+        //musicSrv.playSong();
         controller.show(0);
     }
 
@@ -110,7 +135,7 @@ public class MainActivity extends ActionBarActivity implements MediaPlayerContro
             musicSrv.setList(songList);
             musicBound = true;
             Log.v("after service connected","musicsrv initialized");
-            loadFirstSong();
+            //loadFirstSong();
         }
 
         @Override
@@ -169,31 +194,7 @@ public class MainActivity extends ActionBarActivity implements MediaPlayerContro
         return super.onOptionsItemSelected(item);
     }
 
-    //method to retrieve song info from device
-    public void getSongList(){
-        //query external audio
-        ContentResolver musicResolver = getContentResolver();
-        Uri musicUri = android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
-        Cursor musicCursor = musicResolver.query(musicUri, null, null, null, null);
-        //iterate over results if valid
-        if(musicCursor!=null && musicCursor.moveToFirst()){
-            //get columns
-            int titleColumn = musicCursor.getColumnIndex
-                    (android.provider.MediaStore.Audio.Media.TITLE);
-            int idColumn = musicCursor.getColumnIndex
-                    (android.provider.MediaStore.Audio.Media._ID);
-            int artistColumn = musicCursor.getColumnIndex
-                    (android.provider.MediaStore.Audio.Media.ARTIST);
-            //add songs to list
-            do {
-                long thisId = musicCursor.getLong(idColumn);
-                String thisTitle = musicCursor.getString(titleColumn);
-                String thisArtist = musicCursor.getString(artistColumn);
-                songList.add(new Song(thisId, thisTitle, thisArtist));
-            }
-            while (musicCursor.moveToNext());
-        }
-    }
+
 
     @Override
     protected void onDestroy() {
@@ -358,5 +359,155 @@ public class MainActivity extends ActionBarActivity implements MediaPlayerContro
 
         }
     };
+    //first list of songs
+    public void initSongs(){
+
+    }
+    //method to retrieve song info from device
+    public String getSongList(){
+        Log.v("inside","getslong list");
+
+        /*
+                 * Let's construct the query string. It should be a key/value pair. In
+                 * this case, we just need to specify the command, so no additional
+                 * arguments are needed.
+                 */
+        String data = null;
+        try {
+            data = "command=" + URLEncoder.encode("getsongs", "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        return executeHttpRequest(data);
+
+
+
+       /* //query external audio
+        ContentResolver musicResolver = getContentResolver();
+
+        Uri musicUri = android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+
+        Cursor musicCursor = musicResolver.query(musicUri, null, null, null, null);
+        //iterate over results if valid
+        if(musicCursor!=null && musicCursor.moveToFirst()){
+            //get columns
+            int titleColumn = musicCursor.getColumnIndex
+                    (android.provider.MediaStore.Audio.Media.TITLE);
+            int idColumn = musicCursor.getColumnIndex
+                    (android.provider.MediaStore.Audio.Media._ID);
+            int artistColumn = musicCursor.getColumnIndex
+                    (android.provider.MediaStore.Audio.Media.ARTIST);
+            //add songs to list
+            do {
+                long thisId = musicCursor.getLong(idColumn);
+                String thisTitle = musicCursor.getString(titleColumn);
+                String thisArtist = musicCursor.getString(artistColumn);
+                songList.add(new Song(thisId, thisTitle, thisArtist));
+            }
+            while (musicCursor.moveToNext());
+        } */
+    }
+    private class GetListTask extends AsyncTask {
+
+        /**
+         * Let's make the http request and return the result as a String.
+         */
+        protected String doInBackground(Object... args) {
+            Log.v("inside","background");
+            return getSongList();
+        }
+
+        /**
+         * Parse the String result, and create a new array adapter for the list
+         * view.
+         */
+        protected void onPostExecute(Object objResult) {
+            // check to make sure we're dealing with a string
+            if(objResult != null) {
+
+                String result =   (String) objResult;
+                Log.v("got result",result);
+                JSONParser parser=new JSONParser();
+                Object obj = null;
+                try {
+
+                    try {
+                        JSONArray jsonarr = new JSONArray(result);
+                        //Log.v("jsonarr length","="+jsonarr.length());
+
+                        for(int i = 0; i < jsonarr.length(); i++){
+
+                            org.json.JSONObject jsonobj = jsonarr.getJSONObject(i);
+                            //get song id
+                            int id = jsonobj.getInt("id");
+                            Log.v("id","="+id);
+                            // get song title
+                            String title=jsonobj.getString("title");
+                            Log.v("title",title);
+                            // get song url
+                            String url=jsonobj.getString("url");
+                            Log.v("url",url);
+                            songList.add(new Song(id, title,"myself", url));
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+
+                    // now we'll supply the data structure needed by this ListActivity
+                    //  ArrayAdapter<String> newAdapter = new ArrayAdapter<String>(mainActivity, R.layout.song_list, responseList);
+                    //mainActivity.setListAdapter(newAdapter);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+            }
+        }
+
+    }
+    private static String executeHttpRequest(String data) {
+        Log.v("inside","execute http");
+        String result = "";
+        try {
+            URL url = new URL(SERVER_URL);
+            URLConnection connection = url.openConnection();
+
+            // We need to make sure we specify that we want to provide input and
+            // get output from this connection. We also want to disable caching,
+            // so that we get the most up-to-date result. And, we need to
+            // specify the correct content type for our data.
+            connection.setDoInput(true);
+            connection.setDoOutput(true);
+            connection.setUseCaches(false);
+            connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+
+            // Send the POST data
+            DataOutputStream dataOut = new DataOutputStream(connection.getOutputStream());
+            dataOut.writeBytes(data);
+            dataOut.flush();
+            dataOut.close();
+
+            // get the response from the server and store it in result
+            DataInputStream dataIn = new DataInputStream(connection.getInputStream());
+            String inputLine;
+            while ((inputLine = dataIn.readLine()) != null) {
+                result += inputLine;
+            }
+            dataIn.close();
+        } catch (IOException e) {
+        /*
+         * In case of an error, we're going to return a null String. This
+         * can be changed to a specific error message format if the client
+         * wants to do some error handling. For our simple app, we're just
+         * going to use the null to communicate a general error in
+         * retrieving the data.
+         */
+            e.printStackTrace();
+            result = null;
+            Log.v("inside","executehttp"+e);
+        }
+
+        return result;
+    }
+
 
 }
