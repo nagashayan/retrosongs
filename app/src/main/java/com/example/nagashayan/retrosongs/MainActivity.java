@@ -359,10 +359,7 @@ public class MainActivity extends ActionBarActivity implements MediaPlayerContro
 
         }
     };
-    //first list of songs
-    public void initSongs(){
 
-    }
     //method to retrieve song info from device
     public String getSongList(){
         Log.v("inside","getslong list");

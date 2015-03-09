@@ -165,7 +165,7 @@ MediaPlayer.OnCompletionListener,MediaPlayer.OnBufferingUpdateListener {
     public void onCompletion(MediaPlayer mp) {
         if(player.getCurrentPosition() > 0){
             mp.reset();
-           // playNext();
+            playNext();
         }
     }
 
