@@ -41,8 +41,9 @@ public class FirstActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_first);
 
-        rl=(RelativeLayout) findViewById(R.id.rl);
-        grid =new GridView(this);
+        //rl=(RelativeLayout) findViewById(R.id.rl);
+        //grid =new GridView(this);
+        grid = (GridView) findViewById(R.id.gridview);
         list=new ArrayList<String>();
 
         list.add("Kannada");
@@ -51,20 +52,16 @@ public class FirstActivity extends ActionBarActivity {
         list.add("Tamil");
 
 
-        adp=new ArrayAdapter<String> (this,
-                android.R.layout.simple_dropdown_item_1line,list);
+        adp=new ArrayAdapter<String> (this,android.R.layout.simple_dropdown_item_1line,list);
         grid.setNumColumns(2);
         grid.setBackgroundColor(Color.CYAN);
 
-       // grid.setStretchMode(GridView.AUTO_FIT);
-        grid.setGravity(GridView.AUTO_FIT);
-        grid.setAdapter(adp);
-       // grid.setGravity(0x11);
 
-        //grid.setColumnWidth(10);
-        //grid.setHorizontalSpacing(0);
-        //grid.setVerticalSpacing(0);
-        rl.addView(grid);
+        grid.setAdapter(adp);
+
+
+
+        //rl.addView(grid);
 
          Log.v("list", list.toString());
         grid.setOnItemClickListener(new AdapterView.OnItemClickListener() {
