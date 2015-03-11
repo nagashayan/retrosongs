@@ -32,36 +32,31 @@ import java.util.List;
 public class FirstActivity extends ActionBarActivity {
     RelativeLayout rl;
     GridView grid;
-    List<String> list;
+    ArrayList<Grid> list;
+    ArrayList<String> selectedlist;
     ArrayAdapter<String> adp;
     ProgressDialog m_dialog;
+    GridAdapter gridAdt;
     private static String SERVER_URL = "http://10.0.2.2/langlist.php";
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_first);
 
-        //rl=(RelativeLayout) findViewById(R.id.rl);
-        //grid =new GridView(this);
+        //init all basic ones
         grid = (GridView) findViewById(R.id.gridview);
-        list=new ArrayList<String>();
+        list=new ArrayList<Grid>();
+        //init selected list
+        selectedlist=new ArrayList<String>();
 
-        list.add("Kannada");
-        list.add("Hindi");
-        list.add("Telugu");
-        list.add("Tamil");
+        list.add(new Grid(0, "Kanada","myself","abcd"));
+        list.add(new Grid(0, "Hindi","myself","abcd"));
+        list.add(new Grid(0, "Telugu","myself","abcd"));
+        list.add(new Grid(0, "Tamil","myself","abcd"));
 
-
-        adp=new ArrayAdapter<String> (this,android.R.layout.simple_dropdown_item_1line,list);
-        grid.setNumColumns(2);
-        grid.setBackgroundColor(Color.CYAN);
-
-
-        grid.setAdapter(adp);
-
-
-
-        //rl.addView(grid);
+        //create and set adapter
+        gridAdt = new GridAdapter(this, list);
+        grid.setAdapter(gridAdt);
 
          Log.v("list", list.toString());
         grid.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -71,8 +66,8 @@ public class FirstActivity extends ActionBarActivity {
                                     long arg3) {
                 // TODO Auto-generated method stub
 
-                Toast.makeText(getBaseContext(), list.get(arg2),
-                        Toast.LENGTH_SHORT).show();
+            /*    Toast.makeText(getBaseContext(), list.get(arg2),
+                        Toast.LENGTH_SHORT).show();*/
             }
         });
         m_dialog = new ProgressDialog(this);
@@ -81,8 +76,26 @@ public class FirstActivity extends ActionBarActivity {
      * server in the background, so as not to block our main (UI) thread.
      */
         (new GetListTask()).execute((Object)null);
+
+
     }
 
+    //selecting from grid
+
+    //user song select
+    public void gridPicked(View view){
+        Log.v("gridpicked", view.getTag().toString());
+        selectedlist.add(view.getTag().toString());
+
+    }
+    //when user clicks next button
+    public void selected(View view){
+        Log.v("gridpicked", selectedlist.toString());
+        if(selectedlist.isEmpty()){
+            Toast.makeText(getApplicationContext(),"Select one language atleast",Toast.LENGTH_LONG).show();
+        }
+
+    }
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         //getMenuInflater().inflate(R.menu.activity_main, menu);
@@ -151,12 +164,14 @@ public class FirstActivity extends ActionBarActivity {
                             // get lang's
                             String lang=jsonobj.getString("lang");
                             Log.v("lang",lang);
-                            adp.add(lang);
+                           // adp.add(new Grid(0, lang,"myself","abcd"));
+                            list.add(new Grid(4+i, lang,"myself","abcd"));
                             //xtraLangs. = lang;
                             //list.add(lang);
                         }
+
                         //adp.add(extraLangs);
-                        adp.notifyDataSetChanged();
+                        gridAdt.notifyDataSetChanged();
                         Log.v("list =",list.toString());
                     } catch (JSONException e) {
                         e.printStackTrace();

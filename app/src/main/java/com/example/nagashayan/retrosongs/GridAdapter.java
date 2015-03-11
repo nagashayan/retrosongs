@@ -5,7 +5,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -16,19 +18,19 @@ import java.util.ArrayList;
 
 public class GridAdapter extends BaseAdapter {
 
-    //song list and layout
-    private ArrayList<Song> songs;
-    private LayoutInflater songInf;
+    //Grid list and layout
+    private ArrayList<Grid> Grids;
+    private LayoutInflater GridInf;
 
     //constructor
-    public GridAdapter(Context c, ArrayList<Song> theSongs){
-        songs=theSongs;
-        songInf=LayoutInflater.from(c);
+    public GridAdapter(Context c, ArrayList<Grid> theGrids){
+        Grids=theGrids;
+        GridInf=LayoutInflater.from(c);
     }
 
     @Override
     public int getCount() {
-        return songs.size();
+        return Grids.size();
     }
 
     @Override
@@ -43,20 +45,20 @@ public class GridAdapter extends BaseAdapter {
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        //map to song layout
-        LinearLayout songLay = (LinearLayout)songInf.inflate
-                (R.layout.song, parent, false);
+        //map to Grid layout
+        RelativeLayout GridLay = (RelativeLayout)GridInf.inflate
+                (R.layout.list_text_view, parent, false);
         //get title and artist views
-        TextView songView = (TextView)songLay.findViewById(R.id.song_title);
-        TextView artistView = (TextView)songLay.findViewById(R.id.song_artist);
-        //get song using position
-        Song currSong = songs.get(position);
+        TextView nameView = (TextView)GridLay.findViewById(R.id.name);
+        //ImageView imageView = (ImageView)GridLay.findViewById(R.id.image);
+        //get Grid using position
+        Grid currGrid = Grids.get(position);
         //get title and artist strings
-        songView.setText(currSong.getTitle());
-        artistView.setText(currSong.getArtist());
+        nameView.setText(currGrid.getTitle());
+        //imageView.setText(currGrid.getArtist());
         //set position as tag
-        songLay.setTag(position);
-        return songLay;
+        GridLay.setTag(position);
+        return GridLay;
     }
 
 }

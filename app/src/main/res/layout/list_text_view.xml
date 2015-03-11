@@ -2,17 +2,19 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
-    android:onClick="songPicked"
-    android:orientation="vertical"
-    android:padding="5dp" >
-
+    android:padding="5dp"
+    android:onClick="gridPicked">
 
 
     <TextView
-        android:id="@+id/song_artist"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:textColor="#FFFFFF99"
-        android:textSize="18sp" />
+        android:id="@+id/name"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:background="@drawable/gridbg1"
+        android:textColor="@android:color/holo_red_dark"
+        android:textSize="18sp"
+        android:gravity="center"
+        android:text="one"/>
+
 
 </RelativeLayout>
