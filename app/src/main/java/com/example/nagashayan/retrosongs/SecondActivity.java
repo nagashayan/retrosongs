@@ -2,14 +2,12 @@ package com.example.nagashayan.retrosongs;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
-import android.graphics.Color;
 import android.os.AsyncTask;
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.View;
-import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.GridView;
@@ -28,9 +26,8 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.util.ArrayList;
-import java.util.List;
 
-public class FirstActivity extends ActionBarActivity {
+public class SecondActivity extends ActionBarActivity {
     RelativeLayout rl;
     GridView grid;
     ArrayList<Grid> list;
@@ -38,12 +35,18 @@ public class FirstActivity extends ActionBarActivity {
 
     ProgressDialog m_dialog;
     GridAdapter gridAdt;
-
+    
     private static String SERVER_URL = "http://10.0.2.2/langlist.php";
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_first);
+
+        //get the data from previous activity
+        Bundle data = getIntent().getExtras();
+        String selectedList = data.getString("selectedlist");
+        Log.v("selected list",selectedList);
 
         //init all basic ones
         grid = (GridView) findViewById(R.id.gridview);
@@ -51,11 +54,6 @@ public class FirstActivity extends ActionBarActivity {
         //init selected list
         selectedlist=new ArrayList<String>();
         m_dialog = new ProgressDialog(this);
-
-        list.add(new Grid(0, "Kanada","myself","abcd"));
-        list.add(new Grid(1, "Hindi","myself","abcd"));
-        list.add(new Grid(2, "Telugu","myself","abcd"));
-        list.add(new Grid(3, "Tamil","myself","abcd"));
 
         //create and set adapter
         gridAdt = new GridAdapter(this, list);
@@ -107,10 +105,9 @@ public class FirstActivity extends ActionBarActivity {
         }
         else{
             Log.v("gridpicked", selectedlist.toString());
-            Intent i = new Intent(this,SecondActivity.class);
+            Intent i = new Intent(this,MainActivity.class);
             i.putExtra("selectedlist",selectedlist.toString());
             startActivity(i);
-
         }
 
     }

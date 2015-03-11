@@ -15,6 +15,7 @@ import java.util.StringTokenizer;
 
 import com.example.nagashayan.retrosongs.MusicService.MusicBinder;
 
+import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.IntentFilter;
 import android.os.AsyncTask;
@@ -80,6 +81,7 @@ public class MainActivity extends ActionBarActivity implements MediaPlayerContro
 
     // Instance Variables
     private MainActivity mainActivity = null;
+    ProgressDialog m_dialog;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -90,6 +92,7 @@ public class MainActivity extends ActionBarActivity implements MediaPlayerContro
         songView = (ListView)findViewById(R.id.song_list);
         //instantiate list
         songList = new ArrayList<Song>();
+        m_dialog = new ProgressDialog(this);
         //get songs from device
        // getSongList();
            /*
@@ -413,7 +416,16 @@ public class MainActivity extends ActionBarActivity implements MediaPlayerContro
             Log.v("inside","background");
             return getSongList();
         }
+        protected void onPreExecute(){
 
+            super.onPreExecute();
+            // initialize the dialog
+            m_dialog.setTitle("Searching...");
+            m_dialog.setMessage("Please wait while searching...");
+            m_dialog.setIndeterminate(true);
+            m_dialog.setCancelable(true);
+            m_dialog.show();
+        }
         /**
          * Parse the String result, and create a new array adapter for the list
          * view.
@@ -458,6 +470,8 @@ public class MainActivity extends ActionBarActivity implements MediaPlayerContro
                 }
 
             }
+            // close the dialog
+            m_dialog.dismiss();
         }
 
     }
