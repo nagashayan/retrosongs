@@ -82,12 +82,15 @@ public class MainActivity extends ActionBarActivity implements MediaPlayerContro
     // Instance Variables
     private MainActivity mainActivity = null;
     ProgressDialog m_dialog;
+    private SongAdapter songAdt;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.v("on create","activity");
         setContentView(R.layout.activity_main);
-
+        //take some values from settings class
+        Settings settings = new Settings();
+        SERVER_URL = settings.SONGS_SERVER_URL;
         //retrieve list view
         songView = (ListView)findViewById(R.id.song_list);
         //instantiate list
@@ -95,11 +98,6 @@ public class MainActivity extends ActionBarActivity implements MediaPlayerContro
         m_dialog = new ProgressDialog(this);
         //get songs from device
        // getSongList();
-           /*
-     * Spawn a GetListTask thread. This thread will get the data from the
-     * server in the background, so as not to block our main (UI) thread.
-     */
-        (new GetListTask()).execute((Object)null);
         //sort alphabetically by title
         Collections.sort(songList, new Comparator<Song>(){
             public int compare(Song a, Song b){
@@ -107,12 +105,18 @@ public class MainActivity extends ActionBarActivity implements MediaPlayerContro
             }
         });
         //create and set adapter
-        SongAdapter songAdt = new SongAdapter(this, songList);
+        songAdt = new SongAdapter(this, songList);
         songView.setAdapter(songAdt);
+           /*
+     * Spawn a GetListTask thread. This thread will get the data from the
+     * server in the background, so as not to block our main (UI) thread.
+     */
+        (new GetListTask()).execute((Object)null);
+
+
         //set controller
         setController();
         Log.v("on create", "after set controller");
-
         //create fragment for handling orientation changes
        /* FragmentManager fm = getSupportFragmentManager();
         mTaskFragment = (TaskFragment) fm.findFragmentByTag(TAG_TASK_FRAGMENT);*/
@@ -147,10 +151,11 @@ public class MainActivity extends ActionBarActivity implements MediaPlayerContro
         }
     };
 
-    //start and bind the service when the activity starts
-    @Override
+    //start and bind the service once we finish getting songs
+
     protected void onStart() {
         super.onStart();
+        Log.v("on activity start","service start");
         if(playIntent==null){
             Log.v("activity","onStart binding service");
             playIntent = new Intent(this, MusicService.class);
@@ -366,7 +371,10 @@ public class MainActivity extends ActionBarActivity implements MediaPlayerContro
     //method to retrieve song info from device
     public String getSongList(){
         Log.v("inside","getslong list");
-
+        //get the data from previous activity
+        Bundle activitydata = getIntent().getExtras();
+        String albumlist = activitydata.getString("selectedlist");
+        Log.v("album list",albumlist);
         /*
                  * Let's construct the query string. It should be a key/value pair. In
                  * this case, we just need to specify the command, so no additional
@@ -374,7 +382,7 @@ public class MainActivity extends ActionBarActivity implements MediaPlayerContro
                  */
         String data = null;
         try {
-            data = "command=" + URLEncoder.encode("getsongs", "UTF-8");
+            data = "albumlist=" + URLEncoder.encode(albumlist, "UTF-8");
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
@@ -433,6 +441,9 @@ public class MainActivity extends ActionBarActivity implements MediaPlayerContro
         protected void onPostExecute(Object objResult) {
             // check to make sure we're dealing with a string
             if(objResult != null) {
+               /* //create and set adapter
+                SongAdapter songAdt = new SongAdapter(getApplicationContext(), songList);
+                songView.setAdapter(songAdt);*/
 
                 String result =   (String) objResult;
                 Log.v("got result",result);
@@ -468,8 +479,20 @@ public class MainActivity extends ActionBarActivity implements MediaPlayerContro
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
+                songAdt.notifyDataSetChanged();
 
             }
+           /* onStartCustom();
+            //sort alphabetically by title
+            Collections.sort(songList, new Comparator<Song>(){
+                public int compare(Song a, Song b){
+                    return a.getTitle().compareTo(b.getTitle());
+                }
+            });
+
+            //set controller
+            setController();
+            Log.v("on create", "after set controller");*/
             // close the dialog
             m_dialog.dismiss();
         }

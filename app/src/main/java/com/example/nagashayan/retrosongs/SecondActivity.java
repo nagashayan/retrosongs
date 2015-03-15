@@ -35,7 +35,7 @@ public class SecondActivity extends ActionBarActivity {
     RelativeLayout rl;
     GridView grid;
     ArrayList<Grid> list;
-    ArrayList<String> selectedlist;
+    ArrayList<Integer> selectedlist;
     String langlist;
     ProgressDialog m_dialog;
     GridAdapter gridAdt;
@@ -64,7 +64,7 @@ public class SecondActivity extends ActionBarActivity {
         grid = (GridView) findViewById(R.id.gridview);
         list=new ArrayList<Grid>();
         //init selected list
-        selectedlist=new ArrayList<String>();
+        selectedlist=new ArrayList<Integer>();
         m_dialog = new ProgressDialog(this);
 
         //create and set adapter
@@ -91,17 +91,19 @@ public class SecondActivity extends ActionBarActivity {
     //user song select
     public void gridPicked(View view){
 
-        String id = view.getTag().toString();
+        String listid = view.getTag().toString();
+        int id = (int)list.get(Integer.parseInt(listid)).getID();
+        Log.v("list at","="+id);
         if(selectedlist.contains(id)){
-            Log.v("id exists",id);
-            selectedlist.remove(id);
-            View tv = (View) grid.getChildAt(Integer.parseInt(id));
+            Log.v("id exists","="+id);
+            selectedlist.remove(selectedlist.indexOf(id));
+            View tv = (View) grid.getChildAt(Integer.parseInt(listid));
             tv.setBackgroundColor(UNSELECT_COLOR);
         }
         else{
-            Log.v("new id",id);
-            selectedlist.add(view.getTag().toString());
-            View tv = (View) grid.getChildAt(Integer.parseInt(id));
+            Log.v("new id","="+id);
+            selectedlist.add(id);
+            View tv = (View) grid.getChildAt(Integer.parseInt(listid));
             tv.setBackgroundColor(Color.parseColor(SELECT_COLOR));
         }
 
@@ -110,7 +112,7 @@ public class SecondActivity extends ActionBarActivity {
     public void selected(View view){
 
         if(selectedlist.isEmpty()){
-            Toast.makeText(getApplicationContext(),"Select one language atleast",Toast.LENGTH_LONG).show();
+            Toast.makeText(getApplicationContext(),"Select one Album atleast",Toast.LENGTH_LONG).show();
         }
         else{
             Log.v("gridpicked", selectedlist.toString());

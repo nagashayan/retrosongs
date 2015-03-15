@@ -97,21 +97,24 @@ public class FirstActivity extends ActionBarActivity {
 
     //selecting from grid
     public void gridPicked(View view){
-        Log.v("gridpicked", view.getTag().toString());
+
         String listid = view.getTag().toString();
+        Log.v("gridid",listid);
         int id = (int)list.get(Integer.parseInt(listid)).getID();
-        Log.v("list at","="+id);
+        Log.v("selectedlist","="+id);
 
 
         if(selectedlist.contains(id)){
             Log.v("id exists","="+id);
-            selectedlist.remove(id);
+            Log.v("curr list","="+selectedlist.toString());
+            selectedlist.remove(selectedlist.indexOf(id));
             View tv = (View) grid.getChildAt(Integer.parseInt(listid));
             tv.setBackgroundColor(UNSELECT_COLOR);
 
         }
         else{
             Log.v("new id","="+id);
+            Log.v("curr list","="+selectedlist.toString());
             selectedlist.add(id);
 
             View tv = (View) grid.getChildAt(Integer.parseInt(listid));
@@ -124,7 +127,7 @@ public class FirstActivity extends ActionBarActivity {
 
         if(haveNetworkConnection()) {
             if (selectedlist.isEmpty()) {
-                Toast.makeText(getApplicationContext(), "Select one language atleast", Toast.LENGTH_LONG).show();
+                Toast.makeText(getApplicationContext(), "Select one Language atleast", Toast.LENGTH_LONG).show();
             } else {
                 Log.v("gridpicked", selectedlist.toString());
                 Intent i = new Intent(this, SecondActivity.class);
