@@ -1,17 +1,23 @@
 package com.example.nagashayan.retrosongs;
 
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.ActionMode;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.CheckedTextView;
 import android.widget.GridView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
@@ -34,84 +40,103 @@ public class FirstActivity extends ActionBarActivity {
     RelativeLayout rl;
     GridView grid;
     ArrayList<Grid> list;
-    ArrayList<String> selectedlist;
+    ArrayList<Integer> selectedlist;
 
     ProgressDialog m_dialog;
     GridAdapter gridAdt;
 
-    private static String SERVER_URL = "http://10.0.2.2/langlist.php";
+    private static String SERVER_URL;
+    private static String SELECT_COLOR;
+    private static int UNSELECT_COLOR;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_first);
 
+        //take some values from settings class
+        Settings settings = new Settings();
+        SERVER_URL = settings.HOME_SERVER_URL;
+        SELECT_COLOR = settings.SELECT_COLOR;
+        UNSELECT_COLOR = settings.UNSELECT_COLOR;
+
         //init all basic ones
         grid = (GridView) findViewById(R.id.gridview);
         list=new ArrayList<Grid>();
+
         //init selected list
-        selectedlist=new ArrayList<String>();
+        selectedlist=new ArrayList<Integer>();
         m_dialog = new ProgressDialog(this);
 
-        list.add(new Grid(0, "Kanada","myself","abcd"));
-        list.add(new Grid(1, "Hindi","myself","abcd"));
-        list.add(new Grid(2, "Telugu","myself","abcd"));
-        list.add(new Grid(3, "Tamil","myself","abcd"));
+        list.add(new Grid(1, "Kanada","myself","abcd"));
+        list.add(new Grid(2, "Hindi","myself","abcd"));
+        list.add(new Grid(3, "Telugu","myself","abcd"));
+        list.add(new Grid(4, "Tamil","myself","abcd"));
 
         //create and set adapter
         gridAdt = new GridAdapter(this, list);
+
         grid.setAdapter(gridAdt);
 
-         Log.v("list", list.toString());
-        grid.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
-            @Override
-            public void onItemClick(AdapterView<?> arg0, View arg1, int arg2,
-                                    long arg3) {
-                // TODO Auto-generated method stub
-
-            /*    Toast.makeText(getBaseContext(), list.get(arg2),
-                        Toast.LENGTH_SHORT).show();*/
-            }
-        });
+         Log.v("list", "="+list+gridAdt);
 
               /*
      * Spawn a GetListTask thread. This thread will get the data from the
      * server in the background, so as not to block our main (UI) thread.
      */
-        (new GetListTask()).execute((Object)null);
+        if(haveNetworkConnection()) {
+            (new GetListTask()).execute((Object)null);
+        }
+        else{
+            Toast.makeText(getApplicationContext(),"Turn on you internet",Toast.LENGTH_LONG).show();
+        }
 
 
     }
 
     //selecting from grid
-
-    //user song select
     public void gridPicked(View view){
         Log.v("gridpicked", view.getTag().toString());
-        String id = view.getTag().toString();
+        String listid = view.getTag().toString();
+        int id = (int)list.get(Integer.parseInt(listid)).getID();
+        Log.v("list at","="+id);
+
+
         if(selectedlist.contains(id)){
-            Log.v("id exists",id);
+            Log.v("id exists","="+id);
             selectedlist.remove(id);
+            View tv = (View) grid.getChildAt(Integer.parseInt(listid));
+            tv.setBackgroundColor(UNSELECT_COLOR);
+
         }
         else{
-            Log.v("new id",id);
-            selectedlist.add(view.getTag().toString());
+            Log.v("new id","="+id);
+            selectedlist.add(id);
+
+            View tv = (View) grid.getChildAt(Integer.parseInt(listid));
+            tv.setBackgroundColor(Color.parseColor(SELECT_COLOR));
         }
 
     }
     //when user clicks next button
     public void selected(View view){
 
-        if(selectedlist.isEmpty()){
-            Toast.makeText(getApplicationContext(),"Select one language atleast",Toast.LENGTH_LONG).show();
+        if(haveNetworkConnection()) {
+            if (selectedlist.isEmpty()) {
+                Toast.makeText(getApplicationContext(), "Select one language atleast", Toast.LENGTH_LONG).show();
+            } else {
+                Log.v("gridpicked", selectedlist.toString());
+                Intent i = new Intent(this, SecondActivity.class);
+                i.putExtra("selectedlist", selectedlist.toString());
+                startActivity(i);
+
+            }
         }
         else{
-            Log.v("gridpicked", selectedlist.toString());
-            Intent i = new Intent(this,SecondActivity.class);
-            i.putExtra("selectedlist",selectedlist.toString());
-            startActivity(i);
-
+            Toast.makeText(getApplicationContext(),"Turn on you internet",Toast.LENGTH_LONG).show();
         }
+
 
     }
     @Override
@@ -119,24 +144,7 @@ public class FirstActivity extends ActionBarActivity {
         //getMenuInflater().inflate(R.menu.activity_main, menu);
         return true;
     }
-    //to retrieve all selected languages by user
 
-    public String getSelectedList() {
-        Log.v("inside", "getselected list");
-
-        /*
-                 * Let's construct the query string. It should be a key/value pair. In
-                 * this case, we just need to specify the command, so no additional
-                 * arguments are needed.
-                 */
-        String data = null;
-        try {
-            data = "command=" + URLEncoder.encode(selectedlist.toString(), "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
-        return executeHttpRequest(data);
-    }
 
     //method to retrieve additional languages
     public String getLangList() {
@@ -183,43 +191,46 @@ public class FirstActivity extends ActionBarActivity {
             // check to make sure we're dealing with a string
             if(objResult != null) {
 
-                String result =   (String) objResult;
-                Log.v("got result",result);
-                JSONParser parser=new JSONParser();
-                Object obj = null;
-                try {
-
+                String result = (String) objResult;
+                Log.v("got result", result);
+                if (result != "" || result != null) {
+                    Log.v("result","is not null");
+                    JSONParser parser = new JSONParser();
+                    Object obj = null;
                     try {
-                        JSONArray jsonarr = new JSONArray(result);
-                        //Log.v("jsonarr length","="+jsonarr.length());
-                        String extraLangs = new String();
-                        for(int i = 0; i < jsonarr.length(); i++){
 
-                            org.json.JSONObject jsonobj = jsonarr.getJSONObject(i);
+                        try {
+                            JSONArray jsonarr = new JSONArray(result);
+                            //Log.v("jsonarr length","="+jsonarr.length());
+                            String extraLangs = new String();
+                            for (int i = 0; i < jsonarr.length(); i++) {
 
-                            // get lang's
-                            String lang=jsonobj.getString("lang");
-                            Log.v("lang",lang);
-                           // adp.add(new Grid(0, lang,"myself","abcd"));
-                            list.add(new Grid(4+i, lang,"myself","abcd"));
-                            //xtraLangs. = lang;
-                            //list.add(lang);
+                                org.json.JSONObject jsonobj = jsonarr.getJSONObject(i);
+
+                                // get lang's
+                                String lang = jsonobj.getString("lang");
+                                Log.v("lang", lang);
+                                // adp.add(new Grid(0, lang,"myself","abcd"));
+                                list.add(new Grid(5 + i, lang, "myself", "abcd"));
+                                //xtraLangs. = lang;
+                                //list.add(lang);
+                            }
+
+                            //adp.add(extraLangs);
+                            gridAdt.notifyDataSetChanged();
+                            Log.v("list =", list.toString());
+                        } catch (JSONException e) {
+                            e.printStackTrace();
                         }
 
-                        //adp.add(extraLangs);
-                        gridAdt.notifyDataSetChanged();
-                        Log.v("list =",list.toString());
-                    } catch (JSONException e) {
+                        // now we'll supply the data structure needed by this ListActivity
+                        //  ArrayAdapter<String> newAdapter = new ArrayAdapter<String>(mainActivity, R.layout.song_list, responseList);
+                        //mainActivity.setListAdapter(newAdapter);
+                    } catch (Exception e) {
                         e.printStackTrace();
                     }
 
-                    // now we'll supply the data structure needed by this ListActivity
-                    //  ArrayAdapter<String> newAdapter = new ArrayAdapter<String>(mainActivity, R.layout.song_list, responseList);
-                    //mainActivity.setListAdapter(newAdapter);
-                } catch (Exception e) {
-                    e.printStackTrace();
                 }
-
             }
             // close the dialog
             m_dialog.dismiss();
@@ -266,8 +277,27 @@ public class FirstActivity extends ActionBarActivity {
             e.printStackTrace();
             result = null;
             Log.v("inside","executehttp"+e);
+
+
         }
 
         return result;
+    }
+    // check data connection enabled or not
+    private boolean haveNetworkConnection() {
+        boolean haveConnectedWifi = false;
+        boolean haveConnectedMobile = false;
+
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo[] netInfo = cm.getAllNetworkInfo();
+        for (NetworkInfo ni : netInfo) {
+            if (ni.getTypeName().equalsIgnoreCase("WIFI"))
+                if (ni.isConnected())
+                    haveConnectedWifi = true;
+            if (ni.getTypeName().equalsIgnoreCase("MOBILE"))
+                if (ni.isConnected())
+                    haveConnectedMobile = true;
+        }
+        return haveConnectedWifi || haveConnectedMobile;
     }
 }

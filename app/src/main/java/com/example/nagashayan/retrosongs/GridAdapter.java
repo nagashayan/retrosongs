@@ -5,6 +5,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.CheckedTextView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
@@ -21,7 +22,7 @@ public class GridAdapter extends BaseAdapter {
     //Grid list and layout
     private ArrayList<Grid> Grids;
     private LayoutInflater GridInf;
-
+    Grid[] grdItems = null;
     //constructor
     public GridAdapter(Context c, ArrayList<Grid> theGrids){
         Grids=theGrids;
@@ -58,6 +59,7 @@ public class GridAdapter extends BaseAdapter {
         //imageView.setText(currGrid.getArtist());
         //set position as tag
         GridLay.setTag(position);
+
         return GridLay;
     }
 

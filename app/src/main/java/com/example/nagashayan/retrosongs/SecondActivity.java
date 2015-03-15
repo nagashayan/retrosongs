@@ -1,7 +1,11 @@
 package com.example.nagashayan.retrosongs;
 
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
@@ -32,21 +36,29 @@ public class SecondActivity extends ActionBarActivity {
     GridView grid;
     ArrayList<Grid> list;
     ArrayList<String> selectedlist;
-
+    String langlist;
     ProgressDialog m_dialog;
     GridAdapter gridAdt;
     
-    private static String SERVER_URL = "http://10.0.2.2/langlist.php";
+    private static String SERVER_URL;
+    private static String SELECT_COLOR;
+    private static int UNSELECT_COLOR;
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        Log.v("inside","second activity");
         setContentView(R.layout.activity_first);
+
+        //take some values from settings class
+        Settings settings = new Settings();
+        SERVER_URL = settings.ALBUMS_SERVER_URL;
+        SELECT_COLOR = settings.SELECT_COLOR;
+        UNSELECT_COLOR = settings.UNSELECT_COLOR;
 
         //get the data from previous activity
         Bundle data = getIntent().getExtras();
-        String selectedList = data.getString("selectedlist");
-        Log.v("selected list",selectedList);
+        langlist = data.getString("selectedlist");
+        Log.v("language list",langlist);
 
         //init all basic ones
         grid = (GridView) findViewById(R.id.gridview);
@@ -59,25 +71,18 @@ public class SecondActivity extends ActionBarActivity {
         gridAdt = new GridAdapter(this, list);
         grid.setAdapter(gridAdt);
 
-         Log.v("list", list.toString());
-        grid.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-
-            @Override
-            public void onItemClick(AdapterView<?> arg0, View arg1, int arg2,
-                                    long arg3) {
-                // TODO Auto-generated method stub
-
-            /*    Toast.makeText(getBaseContext(), list.get(arg2),
-                        Toast.LENGTH_SHORT).show();*/
-            }
-        });
+        Log.v("list", list.toString());
 
               /*
      * Spawn a GetListTask thread. This thread will get the data from the
      * server in the background, so as not to block our main (UI) thread.
      */
+        if(haveNetworkConnection()) {
         (new GetListTask()).execute((Object)null);
-
+        }
+        else{
+            Toast.makeText(getApplicationContext(),"Turn on you internet",Toast.LENGTH_LONG).show();
+        }
 
     }
 
@@ -85,15 +90,19 @@ public class SecondActivity extends ActionBarActivity {
 
     //user song select
     public void gridPicked(View view){
-        Log.v("gridpicked", view.getTag().toString());
+
         String id = view.getTag().toString();
         if(selectedlist.contains(id)){
             Log.v("id exists",id);
             selectedlist.remove(id);
+            View tv = (View) grid.getChildAt(Integer.parseInt(id));
+            tv.setBackgroundColor(UNSELECT_COLOR);
         }
         else{
             Log.v("new id",id);
             selectedlist.add(view.getTag().toString());
+            View tv = (View) grid.getChildAt(Integer.parseInt(id));
+            tv.setBackgroundColor(Color.parseColor(SELECT_COLOR));
         }
 
     }
@@ -146,7 +155,7 @@ public class SecondActivity extends ActionBarActivity {
                  */
         String data = null;
         try {
-            data = "command=" + URLEncoder.encode("getlang", "UTF-8");
+            data = "languages=" + URLEncoder.encode(langlist, "UTF-8");
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
@@ -181,7 +190,7 @@ public class SecondActivity extends ActionBarActivity {
             if(objResult != null) {
 
                 String result =   (String) objResult;
-                Log.v("got result",result);
+                Log.v("got response",result);
                 JSONParser parser=new JSONParser();
                 Object obj = null;
                 try {
@@ -193,12 +202,13 @@ public class SecondActivity extends ActionBarActivity {
                         for(int i = 0; i < jsonarr.length(); i++){
 
                             org.json.JSONObject jsonobj = jsonarr.getJSONObject(i);
-
-                            // get lang's
-                            String lang=jsonobj.getString("lang");
-                            Log.v("lang",lang);
+                            //get album id
+                            int id = jsonobj.getInt("id");
+                            // get ablum name
+                            String name=jsonobj.getString("name");
+                            Log.v("album name",name);
                            // adp.add(new Grid(0, lang,"myself","abcd"));
-                            list.add(new Grid(4+i, lang,"myself","abcd"));
+                            list.add(new Grid(id, name,"myself","abcd"));
                             //xtraLangs. = lang;
                             //list.add(lang);
                         }
@@ -266,5 +276,22 @@ public class SecondActivity extends ActionBarActivity {
         }
 
         return result;
+    }
+    // check data connection enabled or not
+    private boolean haveNetworkConnection() {
+        boolean haveConnectedWifi = false;
+        boolean haveConnectedMobile = false;
+
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo[] netInfo = cm.getAllNetworkInfo();
+        for (NetworkInfo ni : netInfo) {
+            if (ni.getTypeName().equalsIgnoreCase("WIFI"))
+                if (ni.isConnected())
+                    haveConnectedWifi = true;
+            if (ni.getTypeName().equalsIgnoreCase("MOBILE"))
+                if (ni.isConnected())
+                    haveConnectedMobile = true;
+        }
+        return haveConnectedWifi || haveConnectedMobile;
     }
 }

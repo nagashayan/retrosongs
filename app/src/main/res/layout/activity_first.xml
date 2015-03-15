@@ -1,50 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_gravity="center"
-    android:id="@+id/rl">
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="50dp"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:text="Select Language(s)"
-        android:id="@+id/textView2"
-        android:textColor="@android:color/holo_red_dark"
-        android:gravity="center|center_horizontal"
-
-        android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="32dp" />
-    <GridView
-        android:id="@+id/gridview"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-
-
-        android:columnWidth="150dp"
-        android:horizontalSpacing="10dp"
-        android:numColumns="2"
-        android:stretchMode="spacingWidthUniform"
-        android:verticalSpacing="10dp"
-        android:layout_marginTop="39dp"
-        android:layout_below="@+id/textView2"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentBottom="false"
-        android:gravity="center" />
-
+    >
+    <!-- Header aligned to top -->
+<RelativeLayout
+    android:id="@+id/header"
+    android:layout_width="match_parent"
+    android:layout_height="50dp"
+    android:background="#ff000000"
+    android:layout_alignParentTop="true"
+    android:layout_alignParentLeft="true"
+    android:layout_alignParentStart="true">
+    <View
+        android:id="@+id/divider"
+        android:layout_width="1dp"
+        android:layout_height="match_parent"
+        android:background="#fffbfbfb"
+        android:layout_alignBottom="@+id/button"
+        android:layout_toLeftOf="@+id/button"
+        android:minWidth="10dp"
+        android:visibility="visible"
+        android:layout_alignParentTop="true" />
     <Button
         style="?android:attr/buttonStyleSmall"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:text="Next"
         android:id="@+id/button"
-        android:layout_above="@+id/gridview"
+        android:background="#ff000000"
+        android:textColor="#FFFDFDFD"
+        android:textSize="15sp"
+        android:onClick="selected"
+        android:layout_alignParentTop="true"
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true"
-        android:paddingRight="10dp"
-        android:layout_marginRight="20dp"
-        android:onClick="selected"/>
+        android:gravity="center"
+        android:paddingLeft="25dp"
+        android:paddingRight="25dp"
+        android:clickable="true"
+        android:enabled="true"
+        android:focusable="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Select Languages"
+        android:textColor="#FFFDFDFD"
+        android:textSize="20sp"
+        android:gravity="center"
+        android:id="@+id/textView2"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_toLeftOf="@+id/divider"
+        android:layout_toStartOf="@+id/divider"
+        android:layout_alignBottom="@+id/divider" />
+
+
+</RelativeLayout>
+
+    <!-- Footer aligned to bottom -->
+<!-- <RelativeLayout
+android:id="@+id/footer"
+android:layout_width="match_parent"
+android:layout_height="wrap_content"
+android:layout_alignParentBottom="true"
+android:background="#ff000000"
+android:gravity="center" >
+
+<TextView
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_margin="5dp"
+    android:text="Fixed Footer"
+    android:textColor="#FFFDFDFD"
+    android:textSize="20sp" />
+</RelativeLayout> -->
+    <!-- end of footer -->
+    <!-- Scrollable Item below header and above footer -->
+
+    <GridView
+        android:id="@+id/gridview"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+
+        android:numColumns="2"
+        android:stretchMode="spacingWidthUniform"
+        android:verticalSpacing="30dp"
+
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+
+        android:layout_below="@+id/header"
+        android:columnWidth="120dp"
+
+        android:paddingTop="45dp"
+        android:smoothScrollbar="true"
+        android:touchscreenBlocksFocus="false"
+        android:clickable="true"
+        android:elevation="2dp"
+        android:gravity="center" />
+
 
 </RelativeLayout>
