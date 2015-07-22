@@ -130,7 +130,7 @@ public class FirstActivity extends ActionBarActivity {
                 Toast.makeText(getApplicationContext(), "Select one Language atleast", Toast.LENGTH_LONG).show();
             } else {
                 Log.v("gridpicked", selectedlist.toString());
-                Intent i = new Intent(this, SecondActivity.class);
+                Intent i = new Intent(this, MainActivity.class);
                 i.putExtra("selectedlist", selectedlist.toString());
                 startActivity(i);
 
